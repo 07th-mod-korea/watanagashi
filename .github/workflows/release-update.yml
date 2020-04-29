@@ -1,0 +1,45 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Make translated txt files
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    paths:
+    - 'Update/**'
+    - 'translation/**'
+    - 'tips.json'
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    - name: Download latest converter
+      uses: fabriciobastian/download-release-asset-action@v1.0.6
+      with:
+        version: latest
+        repository: HozeSio/when_they_cry_tool
+        file: converter
+    
+    - name: Replace text using translation xlsx files
+      run: |
+        sudo chmod a+x ./converter
+        ./converter replace_text Update translation/xlsx translation/actor.xlsx
+        zip -r Update.zip Update_replaced/
+        
+    - uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        artifacts: "Update.zip,tips.json"
+        name: Release korean update file
+        tag: latest
+        token: ${{ secrets.GITHUB_TOKEN }}
